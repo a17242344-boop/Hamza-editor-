@@ -1,0 +1,181 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hamza Editor</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0b0f19;
+      color: white;
+    }
+    header {
+      padding: 22px 16px;
+      background: #151b2b;
+      border-bottom: 1px solid #30384c;
+      text-align: center;
+    }
+    header h1 { margin: 0; color: #62a0ff; }
+    header p { color: #c1c8d8; }
+    main {
+      max-width: 700px;
+      margin: 25px auto;
+      padding: 16px;
+    }
+    .card {
+      background: #151b2b;
+      border: 1px solid #30384c;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+    h2 { margin-top: 0; }
+    button, select {
+      padding: 12px 16px;
+      border: 0;
+      border-radius: 8px;
+      background: #3978f6;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 4px 2px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 180px;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #46516b;
+      background: #080c14;
+      color: #fff;
+      font: 15px monospace;
+      resize: vertical;
+    }
+    input[type="file"] { max-width: 100%; }
+    #preview {
+      display: block;
+      max-width: 100%;
+      max-height: 420px;
+      margin: 18px auto 0;
+      border-radius: 10px;
+    }
+    .muted { color: #b4bfd3; line-height: 1.6; }
+    footer { text-align: center; padding: 24px; color: #9ba8bd; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Hamza Editor</h1>
+    <p>Your simple photo and text editor</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>🖼️ Photo Editor</h2>
+      <p class="muted">Choose a photo and adjust its appearance.</p>
+      <input id="file" type="file" accept="image/*">
+      <br><br>
+      <label for="brightness">Brightness</label>
+      <input id="brightness" type="range" min="50" max="150" value="100">
+      <br><br>
+      <label for="gray">Black & white</label>
+      <input id="gray" type="checkbox">
+      <br>
+      <img id="preview" alt="Your photo preview" hidden>
+      <br>
+      <button id="download" hidden>Download Photo</button>
+    </section>
+
+    <section class="card">
+      <h2>✍️ Text Editor</h2>
+      <textarea id="text" placeholder="Write your text here..."></textarea>
+      <br>
+      <button id="copy">Copy Text</button>
+      <button id="clear">Clear</button>
+      <p id="status" class="muted"></p>
+    </section>
+
+    <section class="card">
+      <h2>✨ About</h2>
+      <p class="muted">
+        Welcome to Hamza Editor! Edit your photo brightness,
+        preview black and white effects, download your photo,
+        and write or copy text. More editing features can be
+        added in future updates.
+      </p>
+    </section>
+  </main>
+
+  <footer>Made with ❤️ by Hamza</footer>
+
+  <script>
+    const file = document.getElementById('file');
+    const preview = document.getElementById('preview');
+    const brightness = document.getElementById('brightness');
+    const gray = document.getElementById('gray');
+    const download = document.getElementById('download');
+    let originalImage = null;
+
+    function updatePhoto() {
+      if (!originalImage) return;
+      preview.style.filter =
+        `brightness(${brightness.value}%) grayscale(${gray.checked ? 100 : 0}%)`;
+    }
+
+    file.addEventListener('change', () => {
+      const selected = file.files[0];
+      if (!selected) return;
+      const reader = new FileReader();
+      reader.onload = event => {
+        originalImage = new Image();
+        originalImage.onload = () => {
+          preview.src = event.target.result;
+          preview.hidden = false;
+          download.hidden = false;
+          updatePhoto();
+        };
+        originalImage.src = event.target.result;
+      };
+      reader.readAsDataURL(selected);
+    });
+
+    brightness.addEventListener('input', updatePhoto);
+    gray.addEventListener('change', updatePhoto);
+
+    download.addEventListener('click', () => {
+      if (!originalImage) return;
+      const canvas = document.createElement('canvas');
+      canvas.width = originalImage.naturalWidth;
+      canvas.height = originalImage.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.filter = `brightness(${brightness.value}%) grayscale(${gray.checked ? 100 : 0}%)`;
+      ctx.drawImage(originalImage, 0, 0);
+      const link = document.createElement('a');
+      link.download = 'hamza-edited-photo.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+
+    document.getElementById('copy').addEventListener('click', async () => {
+      const text = document.getElementById('text');
+      const status = document.getElementById('status');
+      try {
+        await navigator.clipboard.writeText(text.value);
+        status.textContent = 'Text copied!';
+      } catch {
+        text.select();
+        status.textContent = 'Select the text and choose Copy.';
+      }
+    });
+
+    document.getElementById('clear').addEventListener('click', () => {
+      document.getElementById('text').value = '';
+      document.getElementById('status').textContent = '';
+    });
+  </script>
+</body>
+</html>
